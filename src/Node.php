@@ -156,9 +156,9 @@ abstract class Node implements NodeInterface
 
     /**
      * Walks through all descendant tokens
-     * 
-     * @param callable $callback 
-     * @return mixed 
+     *
+     * @param callable $callback
+     * @return mixed
      */
     public function walkDescendantTokens(callable $callback)
     {
@@ -224,8 +224,8 @@ abstract class Node implements NodeInterface
     }
 
     /**
-     * @param int $offset 
-     * @return null 
+     * @param int $offset
+     * @return Token|null
      */
     public function getTokenAtOffset(int $offset)
     {
