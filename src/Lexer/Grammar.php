@@ -42,7 +42,7 @@ class Grammar
             ),
             new Rule(
                 TokenKind::ENTITY_REF,
-                '&(' . self::FRAGMENT_NAME . ');',
+                '&(?:' . self::FRAGMENT_NAME . ');',
                 [Rule::MODE_DEFAULT],
             ),
             new Rule(
