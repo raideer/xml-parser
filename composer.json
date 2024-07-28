@@ -1,6 +1,6 @@
 {
     "name": "raideer/xml-parser",
-    "description": "XML parser in PHP",
+    "description": "XML parser written in PHP for usage in IDE tools. Produces an Abstract Syntax Tree.",
     "type": "library",
     "license": "MIT",
     "autoload": {
