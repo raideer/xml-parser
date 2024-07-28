@@ -8,11 +8,13 @@ class Token implements JsonSerializable
 {
     public int $kind;
     public string $value;
+    public string $fullValue;
     public int $offset;
 
-    public function __construct(int $kind, string $value, int $offset)
+    public function __construct(int $kind, string $fullValue, string $value, int $offset)
     {
         $this->kind = $kind;
+        $this->fullValue = $fullValue;
         $this->value = $value;
         $this->offset = $offset;
     }
