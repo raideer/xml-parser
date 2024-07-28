@@ -14,6 +14,9 @@ class CharData extends Node
     public $type = self::TYPE;
 
     /**
+     * Returns the text content of the node.
+     * Does not include whitesspace
+     * 
      * @return string|null
      */
     public function getText(): ?string

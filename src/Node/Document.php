@@ -13,6 +13,8 @@ class Document extends Node
     public $type = self::TYPE;
 
     /**
+     * Returns the prolog node
+     * 
      * @return Prolog|null 
      */
     public function getProlog(): ?Prolog
@@ -21,6 +23,8 @@ class Document extends Node
     }
 
     /**
+     * Returns the root element node
+     * 
      * @return Element|null 
      */
     public function getRootElement(): ?Element
@@ -29,6 +33,8 @@ class Document extends Node
     }
 
     /**
+     * Returns the misc node
+     * 
      * @return Misc[] 
      */
     public function getMisc(): array

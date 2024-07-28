@@ -14,6 +14,8 @@ class Reference extends Node
     public $type = self::TYPE;
 
     /**
+     * Returns the entity reference as string.
+     * 
      * @return null|string 
      */
     public function getEntityRef(): ?string
@@ -28,6 +30,8 @@ class Reference extends Node
     }
 
     /**
+     * Returns the character reference as string.
+     * 
      * @return null|string 
      */
     public function getCharRef(): ?string

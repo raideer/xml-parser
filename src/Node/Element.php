@@ -14,6 +14,9 @@ class Element extends Node
     public $type = self::TYPE;
 
     /**
+     * Returns the element name as string.
+     * Returns null if NAME token is not found
+     * 
      * @return null|string 
      */
     public function getName(): ?string
@@ -28,6 +31,8 @@ class Element extends Node
     }
 
     /**
+     * Returns all element attribute nodes
+     * 
      * @return Attribute[] 
      */
     public function getAttributes(): array
@@ -36,6 +41,8 @@ class Element extends Node
     }
 
     /**
+     * Returns the content node
+     * 
      * @return null|Content 
      */
     public function getContent(): ?Content

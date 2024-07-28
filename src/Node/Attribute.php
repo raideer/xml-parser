@@ -14,6 +14,9 @@ class Attribute extends Node
     public $type = self::TYPE;
 
     /**
+     * Returns the attribute name as string.
+     * Returns null if NAME token is not found
+     * 
      * @return null|string 
      */
     public function getName(): ?string
@@ -28,6 +31,9 @@ class Attribute extends Node
     }
 
     /**
+     * Returns the attribute value as string (without quotes)
+     * Returns null if STRING token is not found
+     * 
      * @return null|string 
      */
     public function getValue(): ?string
@@ -39,5 +45,22 @@ class Attribute extends Node
         }
         
         return $token->value;
+    }
+
+    /**
+     * Returns the attribute value as string (with quotes)
+     * Returns null if STRING token is not found
+     * 
+     * @return null|string 
+     */
+    public function getFullValue(): ?string
+    {
+        $token = $this->getFirstToken(TokenKind::STRING);
+
+        if (!$token) {
+            return null;
+        }
+        
+        return $token->fullValue;
     }
 }

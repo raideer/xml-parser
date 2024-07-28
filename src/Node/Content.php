@@ -15,6 +15,8 @@ class Content extends Node
     public $type = self::TYPE;
 
     /**
+     * Returns all child element nodes
+     * 
      * @return Element[] 
      */
     public function getElements(): array
@@ -23,6 +25,8 @@ class Content extends Node
     }
 
     /**
+     * Returns all child reference nodes
+     * 
      * @return Reference[] 
      */
     public function getReferences(): array
@@ -31,6 +35,8 @@ class Content extends Node
     }
 
     /**
+     * Returns all child charData nodes
+     * 
      * @return CharData[] 
      */
     public function getCharData(): array
@@ -39,6 +45,8 @@ class Content extends Node
     }
 
     /**
+     * Returns all CData strings
+     * 
      * @return string[] 
      */
     public function getCData(): array
@@ -49,6 +57,8 @@ class Content extends Node
     }
 
     /**
+     * Returns all comment strings
+     * 
      * @return string[] 
      */
     public function getComments(): array

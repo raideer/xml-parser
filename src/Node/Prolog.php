@@ -13,6 +13,8 @@ class Prolog extends Node
     public $type = self::TYPE;
 
     /**
+     * Returns all child attribute nodes
+     * 
      * @return Attribute[] 
      */
     public function getAttributes(): array
