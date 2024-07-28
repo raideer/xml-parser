@@ -1,3 +1,4 @@
 vendor
 experiments
 .vscode
+.phpunit.result.cache
