@@ -237,7 +237,7 @@ abstract class Node implements JsonSerializable
     /**
      * JSON serialize node for debugging purposes
      * 
-     * {@inheritDoc}
+     * @return mixed
      */
     public function jsonSerialize()
     {

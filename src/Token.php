@@ -29,7 +29,7 @@ class Token implements JsonSerializable
     /**
      * JSON serialize token for debugging purposes
      * 
-     * {@inheritDoc}
+     * @return mixed
      */
     public function jsonSerialize()
     {
