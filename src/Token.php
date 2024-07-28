@@ -2,10 +2,13 @@
 
 namespace Raideer\XmlParser;
 
-use JsonSerializable;
-
-class Token implements JsonSerializable
+class Token implements NodeInterface
 {
+    /**
+     * @var Node|null
+     */
+    public $parent;
+
     public int $kind;
     public string $value;
     public string $fullValue;

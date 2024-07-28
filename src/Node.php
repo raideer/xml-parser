@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Raideer\XmlParser;
 
-use JsonSerializable;
-
-abstract class Node implements JsonSerializable
+abstract class Node implements NodeInterface
 {
     /**
      * @var string
@@ -19,45 +17,17 @@ abstract class Node implements JsonSerializable
     public $parent;
 
     /**
-     * @var (Node|Token)[]
+     * @var NodeInterface[]
      */
     public $children = [];
 
     /**
-     * Adds a token to the node
-     * 
-     * @param null|Token $token
-     * @return void
-     */
-    public function addToken(?Token $token)
-    {
-        if (!$token) {
-            return;
-        }
-
-        $this->children[] = $token;
-    }
-
-    /**
-     * Adds multiple tokens to node
-     * 
-     * @param null|Token $tokens
-     * @return void
-     */
-    public function addTokens(...$tokens)
-    {
-        foreach ($tokens as $token) {
-            $this->addToken($token);
-        }
-    }
-
-    /**
      * Adds a child node
-     * 
-     * @param null|Node $child
+     *
+     * @param null|NodeInterface $child
      * @return void
      */
-    public function addNode(?Node $child)
+    public function addChild(?NodeInterface $child)
     {
         if (!$child) {
             return;
@@ -69,19 +39,19 @@ abstract class Node implements JsonSerializable
 
     /**
      * Adds multiple child nodes
-     * @param Node|null $children
+     * @param NodeInterface|null $children
      * @return void
      */
-    public function addNodes(...$children)
+    public function addChildren(...$children)
     {
         foreach ($children as $child) {
-            $this->addNode($child);
+            $this->addChild($child);
         }
     }
 
     /**
      * Returns the parent node
-     * 
+     *
      * @return Node|null
      */
     public function getParent(): ?Node
@@ -91,7 +61,7 @@ abstract class Node implements JsonSerializable
 
     /**
      * Returns the first child node of a given type
-     * 
+     *
      * @param string $types
      * @return Node|null
      */
@@ -109,9 +79,9 @@ abstract class Node implements JsonSerializable
     /**
      * Returns the first token of a given kind
      * See: TokenKind class
-     * 
-     * @param int $kinds 
-     * @return Token|null 
+     *
+     * @param int $kinds
+     * @return Token|null
      */
     public function getFirstToken(...$kinds)
     {
@@ -126,9 +96,9 @@ abstract class Node implements JsonSerializable
 
     /**
      * Returns all child nodes of a given type
-     * 
-     * @param string $types 
-     * @return Node[] 
+     *
+     * @param string $types
+     * @return Node[]
      */
     public function getChildNodesOfType(...$types)
     {
@@ -140,9 +110,9 @@ abstract class Node implements JsonSerializable
     /**
      * Returns all child tokens of a given kind
      * See: TokenKind class
-     * 
-     * @param int $kinds 
-     * @return Token[] 
+     *
+     * @param int $kinds
+     * @return Token[]
      */
     public function getChildTokensOfType(...$kinds)
     {
@@ -153,9 +123,9 @@ abstract class Node implements JsonSerializable
 
     /**
      * Walks through all descendant nodes and tokens
-     * 
-     * @param callable $callback 
-     * @return void 
+     *
+     * @param callable $callback
+     * @return void
      */
     public function walkDescendantNodesAndTokens(callable $callback)
     {
@@ -170,9 +140,9 @@ abstract class Node implements JsonSerializable
 
     /**
      * Walks through all descendant nodes
-     * 
-     * @param callable $callback 
-     * @return void 
+     *
+     * @param callable $callback
+     * @return void
      */
     public function walkDescendantNodes(callable $callback)
     {
@@ -185,9 +155,28 @@ abstract class Node implements JsonSerializable
     }
 
     /**
-     * Returns the root node. Will return self if node has no parent
+     * Walks through all descendant tokens
      * 
-     * @return Node 
+     * @param callable $callback 
+     * @return mixed 
+     */
+    public function walkDescendantTokens(callable $callback)
+    {
+        foreach ($this->children as $child) {
+            if ($child instanceof Token) {
+                $callback($child);
+            } elseif ($child instanceof Node) {
+                $child->walkDescendantTokens($callback);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the root node. Will return self if node has no parent
+     *
+     * @return Node
      */
     public function getRoot(): Node
     {
@@ -202,7 +191,7 @@ abstract class Node implements JsonSerializable
 
     /**
      * Returns all child nodes and tokens
-     * 
+     *
      * @return (Node|Token)[]
      */
     public function getChildNodesAndTokens()
@@ -212,8 +201,8 @@ abstract class Node implements JsonSerializable
 
     /**
      * Returns all child nodes
-     * 
-     * @return Node[] 
+     *
+     * @return Node[]
      */
     public function getChildNodes()
     {
@@ -224,8 +213,8 @@ abstract class Node implements JsonSerializable
 
     /**
      * Returns all child tokens
-     * 
-     * @return Token[] 
+     *
+     * @return Token[]
      */
     public function getChildTokens()
     {
@@ -235,8 +224,37 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * @param int $offset 
+     * @return null 
+     */
+    public function getTokenAtOffset(int $offset)
+    {
+        foreach ($this->children as $child) {
+            if ($child instanceof Token) {
+                $end = $child->fullOffset + strlen($child->fullValue);
+
+                if ($child->fullOffset <= $offset && $end >= $offset) {
+                    return $child;
+                }
+            }
+        }
+
+        foreach ($this->children as $child) {
+            if ($child instanceof Node) {
+                $token = $child->getTokenAtOffset($offset);
+
+                if ($token) {
+                    return $token;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * JSON serialize node for debugging purposes
-     * 
+     *
      * @return mixed
      */
     public function jsonSerialize(): mixed
@@ -247,4 +265,5 @@ abstract class Node implements JsonSerializable
             'tokens' => $this->getChildTokens()
         ];
     }
+
 }

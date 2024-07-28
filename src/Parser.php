@@ -44,14 +44,14 @@ class Parser
     {
         $document = new Node\Document();
         
-        $document->addNodes(
+        $document->addChildren(
             $this->parseProlog(),
             $this->parseMisc(),
             $this->parseElement(),
             $this->parseMisc(),
         );
 
-        $document->addToken(
+        $document->addChild(
             $this->consumeOptional(TokenKind::EOF)
         );
 
@@ -73,15 +73,15 @@ class Parser
 
         $prolog = new Node\Prolog();
 
-        $prolog->addToken(
+        $prolog->addChild(
             $this->consume(TokenKind::XML_DECL_OPEN)
         );
 
         while ($attribute = $this->parseAttribute()) {
-            $prolog->addNode($attribute);
+            $prolog->addChild($attribute);
         }
 
-        $prolog->addToken(
+        $prolog->addChild(
             $this->consume(TokenKind::SPECIAL_CLOSE)
         );
 
@@ -103,7 +103,7 @@ class Parser
         }
 
         $misc = new Node\Misc();
-        $misc->addTokens(...$miscTokens);
+        $misc->addChildren(...$miscTokens);
         return $misc;
     }
 
@@ -120,26 +120,26 @@ class Parser
 
         $element = new Node\Element();
 
-        $element->addTokens(
+        $element->addChildren(
             $this->consume(TokenKind::OPEN),
             $this->consume(TokenKind::NAME),
         );
 
         while ($attribute = $this->parseAttribute()) {
-            $element->addNode($attribute);
+            $element->addChild($attribute);
         }
 
         // <element>...</element>
         if ($this->token->kind === TokenKind::CLOSE) {
-            $element->addToken(
+            $element->addChild(
                 $this->consume(TokenKind::CLOSE)
             );
 
-            $element->addNode(
+            $element->addChild(
                 $this->parseContent(),
             );
 
-            $element->addTokens(
+            $element->addChildren(
                 $this->consume(TokenKind::OPEN),
                 $this->consume(TokenKind::SLASH),
                 $this->consume(TokenKind::NAME),
@@ -147,7 +147,7 @@ class Parser
             );
             // <element />
         } else {
-            $element->addToken(
+            $element->addChild(
                 $this->consume(TokenKind::SLASH_CLOSE)
             );
         }
@@ -166,7 +166,7 @@ class Parser
     {
         $content = new Node\Content();
 
-        $content->addNode(
+        $content->addChild(
             $this->parseCharData(),
         );
 
@@ -174,7 +174,7 @@ class Parser
             // Keep parsing
         }
 
-        $content->addNode(
+        $content->addChild(
             $this->parseCharData(),
         );
 
@@ -194,7 +194,7 @@ class Parser
     private function parseContentInner(Node\Content $content)
     {
         if ($this->parseContentMidSection($content)) {
-            $content->addNode(
+            $content->addChild(
                 $this->parseCharData()
             );
 
@@ -213,17 +213,17 @@ class Parser
     private function parseContentMidSection(Node\Content $content)
     {
         if ($element = $this->parseElement()) {
-            $content->addNode($element);
+            $content->addChild($element);
             return true;
         }
 
         if ($reference = $this->parseReference()) {
-            $content->addNode($reference);
+            $content->addChild($reference);
             return true;
         }
 
         if ($token = $this->consumeOptional(TokenKind::CDATA, TokenKind::PI, TokenKind::COMMENT)) {
-            $content->addToken($token);
+            $content->addChild($token);
             return true;
         }
 
@@ -248,7 +248,7 @@ class Parser
         }
 
         $misc = new Node\Reference();
-        $misc->addTokens(...$refTokens);
+        $misc->addChildren(...$refTokens);
         return $misc;
     }
 
@@ -266,7 +266,7 @@ class Parser
         }
 
         $misc = new Node\CharData();
-        $misc->addTokens(...$charDataTokens);
+        $misc->addChildren(...$charDataTokens);
         return $misc;
     }
 
@@ -281,7 +281,7 @@ class Parser
 
         $attribute = new Node\Attribute();
 
-        $attribute->addTokens(
+        $attribute->addChildren(
             $this->consume(TokenKind::NAME),
             $this->consume(TokenKind::EQUALS),
             $this->consume(TokenKind::STRING)
