@@ -31,7 +31,7 @@ class Token implements JsonSerializable
      * 
      * @return mixed
      */
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return [
             'kind' => TokenKind::KIND_NAME[$this->kind],
