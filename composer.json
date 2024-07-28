@@ -2,6 +2,7 @@
     "name": "raideer/xml-parser",
     "description": "XML parser in PHP",
     "type": "library",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "Raideer\\XmlParser\\": "src/"
