@@ -11,7 +11,7 @@ The parser implementation is heavily inspired from the Tolerant PHP Parser by Mi
 Via [Composer](https://getcomposer.org/)
 
 ```bash
-composer require raideer/xml-parser --dev
+composer require raideer/xml-parser
 ```
 
 ## Usage
