@@ -1,0 +1,19 @@
+{
+    "name": "raideer/xml-parser",
+    "description": "XML parser in PHP",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Raideer\\XmlParser\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Kristofers Ozolins",
+            "email": "hi@kristofers.dev"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "^11.2"
+    }
+}
