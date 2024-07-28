@@ -1,24 +1,14 @@
 # API Documentation
 ## Node
-### Node::addToken
-Adds a token to the node
-```php
-public function addToken ( ?Token $token )
-```
-### Node::addTokens
-Adds multiple tokens to node
-```php
-public function addTokens ( ...$tokens )
-```
-### Node::addNode
+### Node::addChild
 Adds a child node
 ```php
-public function addNode ( ?Node $child )
+public function addChild ( ?NodeInterface $child )
 ```
-### Node::addNodes
+### Node::addChildren
 Adds multiple child nodes
 ```php
-public function addNodes ( ...$children )
+public function addChildren ( ...$children )
 ```
 ### Node::getParent
 Returns the parent node
@@ -55,6 +45,11 @@ Walks through all descendant nodes
 ```php
 public function walkDescendantNodes ( callable $callback )
 ```
+### Node::walkDescendantTokens
+Walks through all descendant tokens
+```php
+public function walkDescendantTokens ( callable $callback )
+```
 ### Node::getRoot
 Returns the root node. Will return self if node has no parent
 ```php
@@ -74,6 +69,11 @@ public function getChildNodes ( )
 Returns all child tokens
 ```php
 public function getChildTokens ( )
+```
+### Node::getTokenAtOffset
+
+```php
+public function getTokenAtOffset ( int $offset )
 ```
 ### Node::jsonSerialize
 JSON serialize node for debugging purposes
