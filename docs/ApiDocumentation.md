@@ -1,82 +1,82 @@
 # API Documentation
 ## Node
 ### Node::addToken
-
+Adds a token to the node
 ```php
 public function addToken ( ?Token $token )
 ```
 ### Node::addTokens
-
+Adds multiple tokens to node
 ```php
 public function addTokens ( ...$tokens )
 ```
-### Node::addChild
-
+### Node::addNode
+Adds a child node
 ```php
-public function addChild ( ?Node $child )
+public function addNode ( ?Node $child )
 ```
-### Node::addChildren
-
+### Node::addNodes
+Adds multiple child nodes
 ```php
-public function addChildren ( ...$children )
+public function addNodes ( ...$children )
 ```
 ### Node::getParent
-
+Returns the parent node
 ```php
 public function getParent ( ) : ? Node
 ```
 ### Node::getFirstChildNode
-
+Returns the first child node of a given type
 ```php
 public function getFirstChildNode ( ...$types )
 ```
 ### Node::getFirstToken
-
+Returns the first token of a given kind See: TokenKind class
 ```php
 public function getFirstToken ( ...$kinds )
 ```
 ### Node::getChildNodesOfType
-
+Returns all child nodes of a given type
 ```php
 public function getChildNodesOfType ( ...$types )
 ```
 ### Node::getChildTokensOfType
-
+Returns all child tokens of a given kind See: TokenKind class
 ```php
 public function getChildTokensOfType ( ...$kinds )
 ```
 ### Node::walkDescendantNodesAndTokens
-
+Walks through all descendant nodes and tokens
 ```php
 public function walkDescendantNodesAndTokens ( callable $callback )
 ```
 ### Node::walkDescendantNodes
-
+Walks through all descendant nodes
 ```php
 public function walkDescendantNodes ( callable $callback )
 ```
 ### Node::getRoot
-
+Returns the root node. Will return self if node has no parent
 ```php
 public function getRoot ( ) : Node
 ```
 ### Node::getChildNodesAndTokens
-
+Returns all child nodes and tokens
 ```php
 public function getChildNodesAndTokens ( )
 ```
 ### Node::getChildNodes
-
+Returns all child nodes
 ```php
 public function getChildNodes ( )
 ```
 ### Node::getChildTokens
-
+Returns all child tokens
 ```php
 public function getChildTokens ( )
 ```
 ### Node::jsonSerialize
-{@inheritDoc}
+JSON serialize node for debugging purposes {@inheritDoc}
 ```php
 public function jsonSerialize ( )
 ```
@@ -199,10 +199,14 @@ public function tokenize ( string $input )
 ### Token::__construct
 
 ```php
-public function __construct ( int $kind, string $fullValue, string $value, int $offset )
+public function __construct ( int $kind,
+        string $fullValue,
+        string $value,
+        int $offset,
+        int $fullOffset, )
 ```
 ### Token::jsonSerialize
-{@inheritDoc}
+JSON serialize token for debugging purposes {@inheritDoc}
 ```php
 public function jsonSerialize ( )
 ```

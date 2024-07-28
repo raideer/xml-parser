@@ -24,6 +24,8 @@ abstract class Node implements JsonSerializable
     public $children = [];
 
     /**
+     * Adds a token to the node
+     * 
      * @param null|Token $token
      * @return void
      */
@@ -37,6 +39,8 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Adds multiple tokens to node
+     * 
      * @param null|Token $tokens
      * @return void
      */
@@ -48,10 +52,12 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Adds a child node
+     * 
      * @param null|Node $child
      * @return void
      */
-    public function addChild(?Node $child)
+    public function addNode(?Node $child)
     {
         if (!$child) {
             return;
@@ -62,17 +68,20 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Adds multiple child nodes
      * @param Node|null $children
      * @return void
      */
-    public function addChildren(...$children)
+    public function addNodes(...$children)
     {
         foreach ($children as $child) {
-            $this->addChild($child);
+            $this->addNode($child);
         }
     }
 
     /**
+     * Returns the parent node
+     * 
      * @return Node|null
      */
     public function getParent(): ?Node
@@ -81,6 +90,8 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Returns the first child node of a given type
+     * 
      * @param string $types
      * @return Node|null
      */
@@ -96,6 +107,9 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Returns the first token of a given kind
+     * See: TokenKind class
+     * 
      * @param int $kinds 
      * @return Token|null 
      */
@@ -111,6 +125,8 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Returns all child nodes of a given type
+     * 
      * @param string $types 
      * @return Node[] 
      */
@@ -122,8 +138,11 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Returns all child tokens of a given kind
+     * See: TokenKind class
+     * 
      * @param int $kinds 
-     * @return (Node|Token)[] 
+     * @return Token[] 
      */
     public function getChildTokensOfType(...$kinds)
     {
@@ -133,6 +152,7 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Walks through all descendant nodes and tokens
      * 
      * @param callable $callback 
      * @return void 
@@ -149,6 +169,8 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Walks through all descendant nodes
+     * 
      * @param callable $callback 
      * @return void 
      */
@@ -163,6 +185,8 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Returns the root node. Will return self if node has no parent
+     * 
      * @return Node 
      */
     public function getRoot(): Node
@@ -177,6 +201,8 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Returns all child nodes and tokens
+     * 
      * @return (Node|Token)[]
      */
     public function getChildNodesAndTokens()
@@ -185,6 +211,8 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Returns all child nodes
+     * 
      * @return Node[] 
      */
     public function getChildNodes()
@@ -195,6 +223,8 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * Returns all child tokens
+     * 
      * @return Token[] 
      */
     public function getChildTokens()
@@ -205,6 +235,8 @@ abstract class Node implements JsonSerializable
     }
 
     /**
+     * JSON serialize node for debugging purposes
+     * 
      * {@inheritDoc}
      */
     public function jsonSerialize()

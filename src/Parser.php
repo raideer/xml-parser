@@ -44,7 +44,7 @@ class Parser
     {
         $document = new Node\Document();
         
-        $document->addChildren(
+        $document->addNodes(
             $this->parseProlog(),
             $this->parseMisc(),
             $this->parseElement(),
@@ -78,7 +78,7 @@ class Parser
         );
 
         while ($attribute = $this->parseAttribute()) {
-            $prolog->addChild($attribute);
+            $prolog->addNode($attribute);
         }
 
         $prolog->addToken(
@@ -126,7 +126,7 @@ class Parser
         );
 
         while ($attribute = $this->parseAttribute()) {
-            $element->addChild($attribute);
+            $element->addNode($attribute);
         }
 
         // <element>...</element>
@@ -135,7 +135,7 @@ class Parser
                 $this->consume(TokenKind::CLOSE)
             );
 
-            $element->addChild(
+            $element->addNode(
                 $this->parseContent(),
             );
 
@@ -166,7 +166,7 @@ class Parser
     {
         $content = new Node\Content();
 
-        $content->addChild(
+        $content->addNode(
             $this->parseCharData(),
         );
 
@@ -174,7 +174,7 @@ class Parser
             // Keep parsing
         }
 
-        $content->addChild(
+        $content->addNode(
             $this->parseCharData(),
         );
 
@@ -194,7 +194,7 @@ class Parser
     private function parseContentInner(Node\Content $content)
     {
         if ($this->parseContentMidSection($content)) {
-            $content->addChild(
+            $content->addNode(
                 $this->parseCharData()
             );
 
@@ -213,12 +213,12 @@ class Parser
     private function parseContentMidSection(Node\Content $content)
     {
         if ($element = $this->parseElement()) {
-            $content->addChild($element);
+            $content->addNode($element);
             return true;
         }
 
         if ($reference = $this->parseReference()) {
-            $content->addChild($reference);
+            $content->addNode($reference);
             return true;
         }
 
