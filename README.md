@@ -4,6 +4,8 @@ This is an XML parser written in PHP for usage in IDE tools. It is significantly
 XML parsers, but the benifit is that you get an Abstract Syntax Tree as an output.
 There are also some small adjustments that allows for a slight error tolerance.
 
+The parser implementation is heavily inspired from the Tolerant PHP Parser by Microsoft.
+
 ## Installation
 
 Via [Composer](https://getcomposer.org/)
@@ -90,3 +92,6 @@ $document->walkDescendantNodesAndTokens(function ($nodeOrToken) {
 //   }
 // }
 ```
+
+## Documentation
+**[API Documentation](docs/ApiDocumentation.md)** 
