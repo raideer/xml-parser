@@ -1,7 +1,7 @@
 # XML Parser
 
 This is an XML parser written in PHP for usage in IDE tools. It is significantly slower than existing
-XML parsers, but the benifit is that you get a syntax tree as an output.
+XML parsers, but the benifit is that you get an Abstract Syntax Tree as an output.
 There are also some small adjustments that allows for a slight error tolerance.
 
 ## Installation
