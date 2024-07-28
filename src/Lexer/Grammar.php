@@ -109,7 +109,7 @@ class Grammar
             ),
             new Rule(
                 TokenKind::STRING,
-                '"[^<"]*"|\'[^<\']*\'',
+                '"([^<"]*)"|\'([^<\']*)\'',
                 [Rule::MODE_INSIDE],
             ),
             new Rule(
@@ -122,6 +122,21 @@ class Grammar
                 self::FRAGMENT_S,
                 [Rule::MODE_INSIDE],
                 Rule::FLAG_SKIP
+            ),
+
+            // For error tolerance
+            new Rule(
+                TokenKind::INVALID_STRING,
+                '"([^<>"]*)[ >](?!")|\'([^<>\']*)[ >](?!\')',
+                [Rule::MODE_INSIDE],
+                Rule::FLAG_NONE,
+                TokenKind::STRING
+            ),
+            new Rule(
+                TokenKind::INVALID_OPEN,
+                '<(?!\/)',
+                [Rule::MODE_INSIDE],
+                Rule::FLAG_SKIP,
             ),
         ];
     }

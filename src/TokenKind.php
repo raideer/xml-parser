@@ -24,9 +24,16 @@ class TokenKind
     const STRING = 16;
     const NAME = 17;
     const S = 18;
-    const EOF = 21;
-    const ERROR = 22;
-    const MISSING = 23;
+    const EOF = 22;
+    const ERROR = 21;
+    const MISSING = 22;
+
+    // Tokens for error tolerance
+    // Used for unterminated strings, eg. `attr="value`
+    const INVALID_STRING = 23;
+
+    // Used when encountering `<` before closing the previous one
+    const INVALID_OPEN = 24;
 
     const KIND_NAME = [
         self::COMMENT => 'COMMENT',
@@ -50,5 +57,7 @@ class TokenKind
         self::EOF => 'EOF',
         self::ERROR => 'ERROR',
         self::MISSING => 'MISSING',
+        self::INVALID_STRING => 'INVALID_STRING',
+        self::INVALID_OPEN => 'INVALID_OPEN',
     ];
 }

@@ -20,7 +20,9 @@ class Parser
     }
 
     /**
-     * @return Node\Document 
+     * Parses an XML string into a Document node
+     *
+     * @return Node\Document
      */
     public function parse(string $xml): Node\Document
     {
@@ -35,8 +37,8 @@ class Parser
 
     /**
      * Represents the whole XML document
-     * 
-     * @return Node\Document 
+     *
+     * @return Node\Document
      */
     private function parseDocument()
     {
@@ -58,10 +60,10 @@ class Parser
 
     /**
      * Parses the prolog part of the document
-     * 
+     *
      * Example: <?xml version="1.0"?>
-     * 
-     * @return null|Node\Prolog 
+     *
+     * @return null|Node\Prolog
      */
     private function parseProlog()
     {
@@ -89,8 +91,8 @@ class Parser
     /**
      * Misc consists of any comments, processing instructions or whitespace
      * that are not part of any element
-     * 
-     * @return null|Node\Misc 
+     *
+     * @return null|Node\Misc
      */
     private function parseMisc()
     {
@@ -108,7 +110,7 @@ class Parser
     /**
      * Element can be a self closing element tag <element />
      * or a tag with Content <element>content</element>
-     * @return null|Node\Element 
+     * @return null|Node\Element
      */
     private function parseElement()
     {
@@ -143,7 +145,7 @@ class Parser
                 $this->consume(TokenKind::NAME),
                 $this->consume(TokenKind::CLOSE)
             );
-        // <element />
+            // <element />
         } else {
             $element->addToken(
                 $this->consume(TokenKind::SLASH_CLOSE)
@@ -154,11 +156,11 @@ class Parser
     }
 
     /**
-     * Content of an element. 
-     * 
+     * Content of an element.
+     *
      * CharData? ((Element | Reference | CData | PI | Comment) CharData?)*
-     * 
-     * @return null|Node\Content 
+     *
+     * @return null|Node\Content
      */
     private function parseContent()
     {
@@ -185,7 +187,7 @@ class Parser
 
     /**
      * (Element | Reference | CData | PI | Comment) CharData?
-     * 
+     *
      * @var Node\Content $content
      * @return bool
      */
@@ -204,7 +206,7 @@ class Parser
 
     /**
      * Element | Reference | CData | PI | Comment
-     * 
+     *
      * @var Node\Content $content
      * @return bool
      */
@@ -230,12 +232,12 @@ class Parser
 
     /**
      * Reference is either an entity reference or a character reference
-     * 
+     *
      * Example:
      * - &#x3C; (CharRef)
      * - &docdate; (EntityRef)
-     * 
-     * @return null|Node\Reference 
+     *
+     * @return null|Node\Reference
      */
     private function parseReference()
     {
@@ -252,8 +254,8 @@ class Parser
 
     /**
      * Character data consists of either plain text or whitespace
-     * 
-     * @return null|Node\CharData 
+     *
+     * @return null|Node\CharData
      */
     private function parseCharData()
     {
@@ -269,7 +271,7 @@ class Parser
     }
 
     /**
-     * @return null|Node\Attribute 
+     * @return null|Node\Attribute
      */
     private function parseAttribute()
     {
@@ -289,7 +291,7 @@ class Parser
     }
 
     /**
-     * @param int[] $kinds 
+     * @param int[] $kinds
      * @return bool
      */
     private function lookahead(int ...$kinds): bool
@@ -315,8 +317,8 @@ class Parser
     }
     
     /**
-     * @param int $kind 
-     * @return Token 
+     * @param int $kind
+     * @return Token
      */
     private function consume(int $kind): Token
     {
@@ -327,12 +329,12 @@ class Parser
             return $token;
         }
 
-        return new Token(TokenKind::MISSING, '', $token->offset);
+        return new Token(TokenKind::MISSING, '', '', $token->offset, $token->offset);
     }
 
     /**
-     * @param int[] $kinds 
-     * @return null|Token 
+     * @param int[] $kinds
+     * @return null|Token
      */
     private function consumeOptional(int ...$kinds): ?Token
     {
@@ -347,15 +349,14 @@ class Parser
     }
 
     /**
-     * @param int[] $kinds 
-     * @return null|Token[] 
+     * @param int[] $kinds
+     * @return null|Token[]
      */
     private function consumeAllOptional(int ...$kinds): ?array
     {
         $tokens = [];
 
-        while ($token = $this->consumeOptional(...$kinds))
-        {
+        while ($token = $this->consumeOptional(...$kinds)) {
             $tokens[] = $token;
         }
 

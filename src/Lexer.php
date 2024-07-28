@@ -68,10 +68,10 @@ class Lexer
 
         // Check if we managed to tokenize the whole XML file or if it stopped due to an error
         if ($this->offset === $inputLen) {
-            $tokens[] = new Token(TokenKind::EOF, '', '', $this->offset);
+            $tokens[] = new Token(TokenKind::EOF, '', '', $this->offset, $this->offset);
         } else {
             $value = substr($input, $this->offset);
-            $tokens[] = new Token(TokenKind::ERROR, $value, $value, $this->offset);
+            $tokens[] = new Token(TokenKind::ERROR, $value, $value, $this->offset, $this->offset);
         }
 
         return $tokens;
@@ -110,7 +110,7 @@ class Lexer
             return true;
         }
 
-        return new Token($rule->token, $firstMatch[0], $matchValue, (int) $matchOffset);
+        return new Token($rule->category ?? $rule->token, $firstMatch[0], $matchValue, (int) $matchOffset, (int) $firstMatch[1]);
     }
 
     /**

@@ -184,8 +184,10 @@ final class LexerTest extends TestCase
 
         $valueToken = $tokens[4];
 
-        $this->assertEquals('"value"', $valueToken->value);
-        $this->assertEquals(10, $valueToken->offset);
+        $this->assertEquals('value', $valueToken->value);
+        $this->assertEquals('"value"', $valueToken->fullValue);
+        $this->assertEquals(11, $valueToken->offset);
+        $this->assertEquals(10, $valueToken->fullOffset);
     }
 
     public function testCanTokenizeWithText(): void
