@@ -6,65 +6,53 @@ namespace Raideer\XmlParser\Node;
 
 use Raideer\XmlParser\Node;
 use Raideer\XmlParser\Token;
-use Raideer\XmlParser\TokenKind;
+use Raideer\XmlParser\TokenType;
 
-class Content extends Node
+final class Content extends Node
 {
-    const TYPE = 'content';
-
-    public $type = self::TYPE;
-
     /**
-     * Returns all child element nodes
-     * 
-     * @return Element[] 
+     * @return Element[]
      */
     public function getElements(): array
     {
-        return $this->getChildNodesOfType(Element::TYPE);
+        return $this->getChildrenOfType(Element::class);
     }
 
     /**
-     * Returns all child reference nodes
-     * 
-     * @return Reference[] 
+     * @return Reference[]
      */
     public function getReferences(): array
     {
-        return $this->getChildNodesOfType(Reference::TYPE);
+        return $this->getChildrenOfType(Reference::class);
     }
 
     /**
-     * Returns all child charData nodes
-     * 
-     * @return CharData[] 
+     * @return CharData[]
      */
     public function getCharData(): array
     {
-        return $this->getChildNodesOfType(CharData::TYPE);
+        return $this->getChildrenOfType(CharData::class);
     }
 
     /**
-     * Returns all CData strings
-     * 
-     * @return string[] 
+     * @return string[]
      */
     public function getCData(): array
     {
-        return array_map(function (Token $token) {
-            return $token->value;
-        }, $this->getChildTokensOfType(TokenKind::CDATA));
+        return array_map(
+            fn (Token $token) => $token->value,
+            $this->getChildTokensOfType(TokenType::CData),
+        );
     }
 
     /**
-     * Returns all comment strings
-     * 
-     * @return string[] 
+     * @return string[]
      */
     public function getComments(): array
     {
-        return array_map(function (Token $token) {
-            return $token->value;
-        }, $this->getChildTokensOfType(TokenKind::COMMENT));
+        return array_map(
+            fn (Token $token) => $token->value,
+            $this->getChildTokensOfType(TokenType::Comment),
+        );
     }
 }

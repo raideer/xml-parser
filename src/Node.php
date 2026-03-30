@@ -4,71 +4,89 @@ declare(strict_types=1);
 
 namespace Raideer\XmlParser;
 
-abstract class Node implements NodeInterface
+abstract class Node implements \JsonSerializable
 {
-    /**
-     * @var string
-     */
-    public $type;
+    protected ?Node $parent = null;
 
-    /**
-     * @var Node|null
-     */
-    public $parent;
+    /** @var array<Node|Token> */
+    protected array $children = [];
 
-    /**
-     * @var NodeInterface[]
-     */
-    public $children = [];
-
-    /**
-     * Adds a child node
-     *
-     * @param null|NodeInterface $child
-     * @return void
-     */
-    public function addChild(?NodeInterface $child)
+    public function addChild(Node|Token|null $child): void
     {
-        if (!$child) {
+        if ($child === null) {
             return;
         }
 
-        $child->parent = $this;
+        if ($child instanceof Node) {
+            $child->parent = $this;
+        }
+
         $this->children[] = $child;
     }
 
-    /**
-     * Adds multiple child nodes
-     * @param NodeInterface|null $children
-     * @return void
-     */
-    public function addChildren(...$children)
+    public function addChildren(Node|Token|null ...$children): void
     {
         foreach ($children as $child) {
             $this->addChild($child);
         }
     }
 
-    /**
-     * Returns the parent node
-     *
-     * @return Node|null
-     */
     public function getParent(): ?Node
     {
         return $this->parent;
     }
 
     /**
-     * Returns the first child node of a given type
-     *
-     * @param string $types
-     * @return Node|null
+     * @return array<Node|Token>
      */
-    public function getFirstChildNode(...$types)
+    public function getChildren(): array
+    {
+        return $this->children;
+    }
+
+    public function getSpan(): ?Span
+    {
+        $first = null;
+        $last = null;
+
+        foreach ($this->children as $child) {
+            $span = $child instanceof Token ? $child->span : $child->getSpan();
+            if ($span === null) {
+                continue;
+            }
+            if ($first === null) {
+                $first = $span;
+            }
+            $last = $span;
+        }
+
+        if ($first === null) {
+            return null;
+        }
+
+        return $first->merge($last);
+    }
+
+    /**
+     * @template T of Node
+     * @param class-string<T> $class
+     * @return T|null
+     */
+    public function getFirstChildOfType(string $class): ?Node
     {
         foreach ($this->children as $child) {
-            if (in_array($child->type, $types) && $child instanceof Node) {
+            if ($child instanceof $class) {
+                return $child;
+            }
+        }
+
+        return null;
+    }
+
+    public function getFirstToken(TokenType ...$types): ?Token
+    {
+        foreach ($this->children as $child) {
+            if ($child instanceof Token && $child->is(...$types)) {
                 return $child;
             }
         }
@@ -77,57 +95,73 @@ abstract class Node implements NodeInterface
     }
 
     /**
-     * Returns the first token of a given kind
-     * See: TokenKind class
-     *
-     * @param int $kinds
-     * @return Token|null
+     * @template T of Node
+     * @param class-string<T> $class
+     * @return T[]
      */
-    public function getFirstToken(...$kinds)
+    public function getChildrenOfType(string $class): array
     {
-        foreach ($this->children as $child) {
-            if (in_array($child->kind, $kinds) && $child instanceof Token) {
-                return $child;
-            }
-        }
-
-        return null;
+        return array_values(array_filter(
+            $this->children,
+            fn (Node|Token $child) => $child instanceof $class,
+        ));
     }
 
     /**
-     * Returns all child nodes of a given type
-     *
-     * @param string $types
-     * @return Node[]
-     */
-    public function getChildNodesOfType(...$types)
-    {
-        return array_filter($this->children, function ($child) use ($types) {
-            return in_array($child->type, $types) && $child instanceof Node;
-        });
-    }
-
-    /**
-     * Returns all child tokens of a given kind
-     * See: TokenKind class
-     *
-     * @param int $kinds
      * @return Token[]
      */
-    public function getChildTokensOfType(...$kinds)
+    public function getChildTokensOfType(TokenType ...$types): array
     {
-        return array_filter($this->children, function ($child) use ($kinds) {
-            return in_array($child->kind, $kinds) && $child instanceof Token;
-        });
+        return array_values(array_filter(
+            $this->children,
+            fn (Node|Token $child) => $child instanceof Token && $child->is(...$types),
+        ));
     }
 
     /**
-     * Walks through all descendant nodes and tokens
-     *
-     * @param callable $callback
-     * @return void
+     * @return Node[]
      */
-    public function walkDescendantNodesAndTokens(callable $callback)
+    public function getChildNodes(): array
+    {
+        return array_values(array_filter(
+            $this->children,
+            fn (Node|Token $child) => $child instanceof Node,
+        ));
+    }
+
+    /**
+     * @return Token[]
+     */
+    public function getChildTokens(): array
+    {
+        return array_values(array_filter(
+            $this->children,
+            fn (Node|Token $child) => $child instanceof Token,
+        ));
+    }
+
+    public function walkDescendantNodes(callable $callback): void
+    {
+        foreach ($this->children as $child) {
+            if ($child instanceof Node) {
+                $callback($child);
+                $child->walkDescendantNodes($callback);
+            }
+        }
+    }
+
+    public function walkDescendantTokens(callable $callback): void
+    {
+        foreach ($this->children as $child) {
+            if ($child instanceof Token) {
+                $callback($child);
+            } elseif ($child instanceof Node) {
+                $child->walkDescendantTokens($callback);
+            }
+        }
+    }
+
+    public function walkDescendantNodesAndTokens(callable $callback): void
     {
         foreach ($this->children as $child) {
             $callback($child);
@@ -138,46 +172,6 @@ abstract class Node implements NodeInterface
         }
     }
 
-    /**
-     * Walks through all descendant nodes
-     *
-     * @param callable $callback
-     * @return void
-     */
-    public function walkDescendantNodes(callable $callback)
-    {
-        foreach ($this->children as $child) {
-            if ($child instanceof Node) {
-                $callback($child);
-                $child->walkDescendantNodes($callback);
-            }
-        }
-    }
-
-    /**
-     * Walks through all descendant tokens
-     *
-     * @param callable $callback
-     * @return mixed
-     */
-    public function walkDescendantTokens(callable $callback)
-    {
-        foreach ($this->children as $child) {
-            if ($child instanceof Token) {
-                $callback($child);
-            } elseif ($child instanceof Node) {
-                $child->walkDescendantTokens($callback);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns the root node. Will return self if node has no parent
-     *
-     * @return Node
-     */
     public function getRoot(): Node
     {
         $node = $this;
@@ -189,51 +183,11 @@ abstract class Node implements NodeInterface
         return $node;
     }
 
-    /**
-     * Returns all child nodes and tokens
-     *
-     * @return (Node|Token)[]
-     */
-    public function getChildNodesAndTokens()
-    {
-        return $this->children;
-    }
-
-    /**
-     * Returns all child nodes
-     *
-     * @return Node[]
-     */
-    public function getChildNodes()
-    {
-        return array_filter($this->children, function ($child) {
-            return $child instanceof Node;
-        });
-    }
-
-    /**
-     * Returns all child tokens
-     *
-     * @return Token[]
-     */
-    public function getChildTokens()
-    {
-        return array_filter($this->children, function ($child) {
-            return $child instanceof Token;
-        });
-    }
-
-    /**
-     * @param int $offset
-     * @return Token|null
-     */
-    public function getTokenAtOffset(int $offset)
+    public function getTokenAtOffset(int $offset): ?Token
     {
         foreach ($this->children as $child) {
             if ($child instanceof Token) {
-                $end = $child->fullOffset + strlen($child->fullValue);
-
-                if ($child->fullOffset <= $offset && $end >= $offset) {
+                if ($child->span->start <= $offset && $child->span->end >= $offset) {
                     return $child;
                 }
             }
@@ -242,8 +196,7 @@ abstract class Node implements NodeInterface
         foreach ($this->children as $child) {
             if ($child instanceof Node) {
                 $token = $child->getTokenAtOffset($offset);
-
-                if ($token) {
+                if ($token !== null) {
                     return $token;
                 }
             }
@@ -252,18 +205,11 @@ abstract class Node implements NodeInterface
         return null;
     }
 
-    /**
-     * JSON serialize node for debugging purposes
-     *
-     * @return mixed
-     */
     public function jsonSerialize(): mixed
     {
         return [
-            'type' => $this->type,
-            'children' => $this->getChildNodes(),
-            'tokens' => $this->getChildTokens()
+            'type' => (new \ReflectionClass($this))->getShortName(),
+            'children' => $this->children,
         ];
     }
-
 }

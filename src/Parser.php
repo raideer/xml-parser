@@ -4,46 +4,103 @@ declare(strict_types=1);
 
 namespace Raideer\XmlParser;
 
-class Parser
+final class Parser
 {
-    private Lexer $lexer;
-    private Token $token;
-    
-    /**
-     * @var LexerTokenProvider
-     */
-    private $tokenProvider;
+    /** @var Token[] */
+    private array $tokens;
+    private int $pos;
+    /** @var ParseError[] */
+    private array $errors;
+    private string $input;
 
-    public function __construct()
+    public function parse(string $xml): ParseResult
     {
-        $this->lexer = new Lexer();
+        $this->input = $xml;
+        $this->tokens = (new Lexer())->tokenizeAll($xml);
+        $this->pos = 0;
+        $this->errors = [];
+
+        $document = $this->parseDocument();
+
+        return new ParseResult($document, $this->errors);
     }
 
-    /**
-     * Parses an XML string into a Document node
-     *
-     * @return Node\Document
-     */
-    public function parse(string $xml): Node\Document
+    private function current(): Token
     {
-        $this->tokenProvider = new LexerTokenProvider(
-            $this->lexer->tokenize($xml)
+        return $this->tokens[$this->pos] ?? $this->tokens[count($this->tokens) - 1];
+    }
+
+    private function advance(): Token
+    {
+        $token = $this->current();
+        if ($this->pos < count($this->tokens) - 1) {
+            $this->pos++;
+        }
+        return $token;
+    }
+
+    private function check(TokenType ...$types): bool
+    {
+        return $this->current()->is(...$types);
+    }
+
+    private function match(TokenType ...$types): ?Token
+    {
+        if ($this->current()->is(...$types)) {
+            return $this->advance();
+        }
+
+        return null;
+    }
+
+    private function expect(TokenType $type): Token
+    {
+        if ($this->current()->is($type)) {
+            return $this->advance();
+        }
+
+        $current = $this->current();
+        $this->errors[] = new ParseError(
+            sprintf("Expected '%s', got '%s'", $type->value, $current->type->value),
+            $current->span,
         );
 
-        $this->token = $this->tokenProvider->scanNextToken();
-
-        return  $this->parseDocument();
+        return new Token(
+            TokenType::Missing,
+            '',
+            '',
+            $current->span,
+        );
     }
 
-    /**
-     * Represents the whole XML document
-     *
-     * @return Node\Document
-     */
-    private function parseDocument()
+    private function lookahead(TokenType ...$types): bool
+    {
+        $startPos = $this->pos;
+        $succeeded = true;
+
+        foreach ($types as $type) {
+            $pos = $startPos + 1;
+            if ($pos >= count($this->tokens) || !$this->tokens[$pos]->is($type)) {
+                $succeeded = false;
+                break;
+            }
+            $startPos = $pos;
+        }
+
+        return $succeeded;
+    }
+
+    private function synchronize(): void
+    {
+        while (!$this->check(TokenType::Open, TokenType::Close, TokenType::Eof)) {
+            $this->advance();
+        }
+    }
+
+    private function parseDocument(): Node\Document
     {
         $document = new Node\Document();
-        
+
         $document->addChildren(
             $this->parseProlog(),
             $this->parseMisc(),
@@ -52,77 +109,59 @@ class Parser
         );
 
         $document->addChild(
-            $this->consumeOptional(TokenKind::EOF)
+            $this->match(TokenType::Eof),
         );
 
         return $document;
     }
 
-    /**
-     * Parses the prolog part of the document
-     *
-     * Example: <?xml version="1.0"?>
-     *
-     * @return null|Node\Prolog
-     */
-    private function parseProlog()
+    private function parseProlog(): ?Node\Prolog
     {
-        if ($this->token->kind !== TokenKind::XML_DECL_OPEN) {
+        if (!$this->check(TokenType::XmlDeclOpen)) {
             return null;
         }
 
         $prolog = new Node\Prolog();
 
-        $prolog->addChild(
-            $this->consume(TokenKind::XML_DECL_OPEN)
-        );
+        $prolog->addChild($this->expect(TokenType::XmlDeclOpen));
 
         while ($attribute = $this->parseAttribute()) {
             $prolog->addChild($attribute);
         }
 
-        $prolog->addChild(
-            $this->consume(TokenKind::SPECIAL_CLOSE)
-        );
+        $prolog->addChild($this->expect(TokenType::SpecialClose));
 
         return $prolog;
     }
 
-    /**
-     * Misc consists of any comments, processing instructions or whitespace
-     * that are not part of any element
-     *
-     * @return null|Node\Misc
-     */
-    private function parseMisc()
+    private function parseMisc(): ?Node\Misc
     {
-        $miscTokens = $this->consumeAllOptional(TokenKind::COMMENT, TokenKind::PI, TokenKind::SEA_WS);
+        $tokens = [];
 
-        if (!$miscTokens) {
+        while ($token = $this->match(TokenType::Comment, TokenType::ProcessingInstruction, TokenType::SeaWhitespace)) {
+            $tokens[] = $token;
+        }
+
+        if (count($tokens) === 0) {
             return null;
         }
 
         $misc = new Node\Misc();
-        $misc->addChildren(...$miscTokens);
+        $misc->addChildren(...$tokens);
         return $misc;
     }
 
-    /**
-     * Element can be a self closing element tag <element />
-     * or a tag with Content <element>content</element>
-     * @return null|Node\Element
-     */
-    private function parseElement()
+    private function parseElement(): ?Node\Element
     {
-        if ($this->token->kind !== TokenKind::OPEN || $this->lookahead(TokenKind::SLASH, TokenKind::NAME)) {
+        if (!$this->check(TokenType::Open) || $this->lookahead(TokenType::Slash, TokenType::Name)) {
             return null;
         }
 
         $element = new Node\Element();
 
         $element->addChildren(
-            $this->consume(TokenKind::OPEN),
-            $this->consume(TokenKind::NAME),
+            $this->expect(TokenType::Open),
+            $this->expect(TokenType::Name),
         );
 
         while ($attribute = $this->parseAttribute()) {
@@ -130,87 +169,54 @@ class Parser
         }
 
         // <element>...</element>
-        if ($this->token->kind === TokenKind::CLOSE) {
-            $element->addChild(
-                $this->consume(TokenKind::CLOSE)
-            );
-
-            $element->addChild(
-                $this->parseContent(),
-            );
+        if ($this->check(TokenType::Close)) {
+            $element->addChild($this->expect(TokenType::Close));
+            $element->addChild($this->parseContent());
 
             $element->addChildren(
-                $this->consume(TokenKind::OPEN),
-                $this->consume(TokenKind::SLASH),
-                $this->consume(TokenKind::NAME),
-                $this->consume(TokenKind::CLOSE)
+                $this->expect(TokenType::Open),
+                $this->expect(TokenType::Slash),
+                $this->expect(TokenType::Name),
+                $this->expect(TokenType::Close),
             );
-            // <element />
         } else {
-            $element->addChild(
-                $this->consume(TokenKind::SLASH_CLOSE)
-            );
+            // <element />
+            $element->addChild($this->expect(TokenType::SlashClose));
         }
 
         return $element;
     }
 
-    /**
-     * Content of an element.
-     *
-     * CharData? ((Element | Reference | CData | PI | Comment) CharData?)*
-     *
-     * @return null|Node\Content
-     */
-    private function parseContent()
+    private function parseContent(): ?Node\Content
     {
         $content = new Node\Content();
 
-        $content->addChild(
-            $this->parseCharData(),
-        );
+        $content->addChild($this->parseCharData());
 
         while ($this->parseContentInner($content)) {
             // Keep parsing
         }
 
-        $content->addChild(
-            $this->parseCharData(),
-        );
+        $content->addChild($this->parseCharData());
 
-        if (count($content->children) === 0) {
+        if (count($content->getChildren()) === 0) {
             return null;
         }
 
         return $content;
     }
 
-    /**
-     * (Element | Reference | CData | PI | Comment) CharData?
-     *
-     * @var Node\Content $content
-     * @return bool
-     */
-    private function parseContentInner(Node\Content $content)
+    private function parseContentInner(Node\Content $content): bool
     {
         if ($this->parseContentMidSection($content)) {
-            $content->addChild(
-                $this->parseCharData()
-            );
-
+            $content->addChild($this->parseCharData());
             return true;
         }
 
         return false;
     }
 
-    /**
-     * Element | Reference | CData | PI | Comment
-     *
-     * @var Node\Content $content
-     * @return bool
-     */
-    private function parseContentMidSection(Node\Content $content)
+    private function parseContentMidSection(Node\Content $content): bool
     {
         if ($element = $this->parseElement()) {
             $content->addChild($element);
@@ -222,7 +228,7 @@ class Parser
             return true;
         }
 
-        if ($token = $this->consumeOptional(TokenKind::CDATA, TokenKind::PI, TokenKind::COMMENT)) {
+        if ($token = $this->match(TokenType::CData, TokenType::ProcessingInstruction, TokenType::Comment)) {
             $content->addChild($token);
             return true;
         }
@@ -230,133 +236,11 @@ class Parser
         return false;
     }
 
-    /**
-     * Reference is either an entity reference or a character reference
-     *
-     * Example:
-     * - &#x3C; (CharRef)
-     * - &docdate; (EntityRef)
-     *
-     * @return null|Node\Reference
-     */
-    private function parseReference()
-    {
-        $refTokens = $this->consumeAllOptional(TokenKind::ENTITY_REF, TokenKind::CHAR_REF);
-
-        if (!$refTokens) {
-            return null;
-        }
-
-        $misc = new Node\Reference();
-        $misc->addChildren(...$refTokens);
-        return $misc;
-    }
-
-    /**
-     * Character data consists of either plain text or whitespace
-     *
-     * @return null|Node\CharData
-     */
-    private function parseCharData()
-    {
-        $charDataTokens = $this->consumeAllOptional(TokenKind::TEXT, TokenKind::SEA_WS);
-
-        if (!$charDataTokens) {
-            return null;
-        }
-
-        $misc = new Node\CharData();
-        $misc->addChildren(...$charDataTokens);
-        return $misc;
-    }
-
-    /**
-     * @return null|Node\Attribute
-     */
-    private function parseAttribute()
-    {
-        if ($this->token->kind !== TokenKind::NAME) {
-            return null;
-        }
-
-        $attribute = new Node\Attribute();
-
-        $attribute->addChildren(
-            $this->consume(TokenKind::NAME),
-            $this->consume(TokenKind::EQUALS),
-            $this->consume(TokenKind::STRING)
-        );
-
-        return $attribute;
-    }
-
-    /**
-     * @param int[] $kinds
-     * @return bool
-     */
-    private function lookahead(int ...$kinds): bool
-    {
-        $startPos = $this->tokenProvider->currentPosition();
-        $startToken = $this->token;
-        $succeeded = true;
-
-        foreach ($kinds as $kind) {
-            $token = $this->tokenProvider->scanNextToken();
-            $currentPosition = $this->tokenProvider->currentPosition();
-            $endPosition = $this->tokenProvider->endPosition();
-
-            if ($currentPosition > $endPosition || $token->kind !== $kind) {
-                $succeeded = false;
-                break;
-            }
-        }
-        
-        $this->tokenProvider->setCurrentPosition($startPos);
-        $this->token = $startToken;
-        return $succeeded;
-    }
-    
-    /**
-     * @param int $kind
-     * @return Token
-     */
-    private function consume(int $kind): Token
-    {
-        $token = $this->token;
-
-        if ($token->kind === $kind) {
-            $this->token = $this->tokenProvider->scanNextToken();
-            return $token;
-        }
-
-        return new Token(TokenKind::MISSING, '', '', $token->offset, $token->offset);
-    }
-
-    /**
-     * @param int[] $kinds
-     * @return null|Token
-     */
-    private function consumeOptional(int ...$kinds): ?Token
-    {
-        $token = $this->token;
-
-        if (in_array($token->kind, $kinds)) {
-            $this->token = $this->tokenProvider->scanNextToken();
-            return $token;
-        }
-
-        return null;
-    }
-
-    /**
-     * @param int[] $kinds
-     * @return null|Token[]
-     */
-    private function consumeAllOptional(int ...$kinds): ?array
+    private function parseReference(): ?Node\Reference
     {
         $tokens = [];
 
-        while ($token = $this->consumeOptional(...$kinds)) {
+        while ($token = $this->match(TokenType::EntityRef, TokenType::CharRef)) {
             $tokens[] = $token;
         }
 
@@ -364,6 +248,42 @@ class Parser
             return null;
         }
 
-        return $tokens;
+        $reference = new Node\Reference();
+        $reference->addChildren(...$tokens);
+        return $reference;
+    }
+
+    private function parseCharData(): ?Node\CharData
+    {
+        $tokens = [];
+
+        while ($token = $this->match(TokenType::Text, TokenType::SeaWhitespace)) {
+            $tokens[] = $token;
+        }
+
+        if (count($tokens) === 0) {
+            return null;
+        }
+
+        $charData = new Node\CharData();
+        $charData->addChildren(...$tokens);
+        return $charData;
+    }
+
+    private function parseAttribute(): ?Node\Attribute
+    {
+        if (!$this->check(TokenType::Name)) {
+            return null;
+        }
+
+        $attribute = new Node\Attribute();
+
+        $attribute->addChildren(
+            $this->expect(TokenType::Name),
+            $this->expect(TokenType::Equals),
+            $this->expect(TokenType::String),
+        );
+
+        return $attribute;
     }
 }

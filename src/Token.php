@@ -1,47 +1,58 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Raideer\XmlParser;
 
-class Token implements NodeInterface
+/**
+ * Represents a single lexical token produced by the Lexer.
+ *
+ * Tokens are leaf nodes in the AST. Each token carries its type, parsed value,
+ * raw source text, and position information via a Span.
+ */
+readonly class Token implements \JsonSerializable
 {
     /**
-     * @var Node|null
+     * @param TokenType $type     The token type
+     * @param string    $value    The parsed/inner value (e.g. without quotes for strings)
+     * @param string    $rawValue The full matched source text
+     * @param Span      $span     Position information in the source input
      */
-    public $parent;
-
-    public int $kind;
-    public string $value;
-    public string $fullValue;
-    public int $offset;
-    public int $fullOffset;
-
     public function __construct(
-        int $kind,
-        string $fullValue,
-        string $value,
-        int $offset,
-        int $fullOffset,
+        public TokenType $type,
+        public string $value,
+        public string $rawValue,
+        public Span $span,
     ) {
-        $this->kind = $kind;
-        $this->fullValue = $fullValue;
-        $this->value = $value;
-        $this->offset = $offset;
-        $this->fullOffset = $fullOffset;
     }
 
     /**
-     * JSON serialize token for debugging purposes
-     * 
-     * @return mixed
+     * Checks whether this token matches any of the given types.
+     *
+     * @param TokenType ...$types One or more token types to check against
+     * @return bool
+     */
+    public function is(TokenType ...$types): bool
+    {
+        foreach ($types as $type) {
+            if ($this->type === $type) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     public function jsonSerialize(): mixed
     {
         return [
-            'kind' => TokenKind::KIND_NAME[$this->kind],
+            'type' => $this->type->value,
             'value' => $this->value,
-            'fullValue' => $this->fullValue,
-            'offset' => $this->offset,
-            'fullOffset' => $this->fullOffset,
+            'rawValue' => $this->rawValue,
+            'span' => $this->span,
         ];
     }
 }

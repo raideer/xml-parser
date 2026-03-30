@@ -6,19 +6,13 @@ namespace Raideer\XmlParser\Node;
 
 use Raideer\XmlParser\Node;
 
-class Prolog extends Node
+final class Prolog extends Node
 {
-    const TYPE = 'prolog';
-
-    public $type = self::TYPE;
-
     /**
-     * Returns all child attribute nodes
-     * 
-     * @return Attribute[] 
+     * @return Attribute[]
      */
     public function getAttributes(): array
     {
-        return $this->getChildNodesOfType(Attribute::TYPE);
+        return $this->getChildrenOfType(Attribute::class);
     }
 }

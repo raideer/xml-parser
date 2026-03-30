@@ -4,92 +4,90 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 use Raideer\XmlParser\Lexer;
-use Raideer\XmlParser\TokenKind;
+use Raideer\XmlParser\TokenType;
 
 final class LexerTest extends TestCase
 {
     public function testCanTokenizeSimple(): void
     {
         $lexer = new Lexer();
-        $tokens = $lexer->tokenize('<xml></xml>');
+        $tokens = $lexer->tokenizeAll('<xml></xml>');
         $this->assertIsArray($tokens);
 
-        $tokenKinds = array_map(fn ($token) => $token->kind, $tokens);
+        $tokenTypes = array_map(fn ($token) => $token->type, $tokens);
 
         $this->assertEquals(
             [
-                TokenKind::OPEN,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::OPEN,
-                TokenKind::SLASH,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::EOF
+                TokenType::Open,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::Open,
+                TokenType::Slash,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::Eof,
             ],
-            $tokenKinds
+            $tokenTypes,
         );
 
         $nameToken = $tokens[1];
 
         $this->assertEquals('xml', $nameToken->value);
-        $this->assertEquals(1, $nameToken->offset);
+        $this->assertEquals(1, $nameToken->span->start);
 
         $lastToken = end($tokens);
 
-        $this->assertEquals(TokenKind::EOF, $lastToken->kind);
+        $this->assertEquals(TokenType::Eof, $lastToken->type);
     }
 
     public function testCanTokenizeWithComments(): void
     {
-        $lexer = new Raideer\XmlParser\Lexer();
-        $tokens = $lexer->tokenize('<xml><!-- comment --></xml>');
-        $this->assertIsArray($tokens);
+        $lexer = new Lexer();
+        $tokens = $lexer->tokenizeAll('<xml><!-- comment --></xml>');
 
-        $tokenKinds = array_map(fn ($token) => $token->kind, $tokens);
+        $tokenTypes = array_map(fn ($token) => $token->type, $tokens);
 
         $this->assertEquals(
             [
-                TokenKind::OPEN,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::COMMENT,
-                TokenKind::OPEN,
-                TokenKind::SLASH,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::EOF
+                TokenType::Open,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::Comment,
+                TokenType::Open,
+                TokenType::Slash,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::Eof,
             ],
-            $tokenKinds
+            $tokenTypes,
         );
 
         $commentToken = $tokens[3];
 
         $this->assertEquals(' comment ', $commentToken->value);
-        $this->assertEquals(9, $commentToken->offset);
+        $this->assertEquals(5, $commentToken->span->start);
     }
 
     public function testCanTokenizeWithCData(): void
     {
-        $lexer = new Raideer\XmlParser\Lexer();
-        $tokens = $lexer->tokenize('<xml><![CDATA[hello]]></xml>');
-        $this->assertIsArray($tokens);
+        $lexer = new Lexer();
+        $tokens = $lexer->tokenizeAll('<xml><![CDATA[hello]]></xml>');
 
-        $tokenKinds = array_map(fn ($token) => $token->kind, $tokens);
+        $tokenTypes = array_map(fn ($token) => $token->type, $tokens);
 
         $this->assertEquals(
             [
-                TokenKind::OPEN,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::CDATA,
-                TokenKind::OPEN,
-                TokenKind::SLASH,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::EOF
+                TokenType::Open,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::CData,
+                TokenType::Open,
+                TokenType::Slash,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::Eof,
             ],
-            $tokenKinds
+            $tokenTypes,
         );
 
         $cdataToken = $tokens[3];
@@ -99,25 +97,24 @@ final class LexerTest extends TestCase
 
     public function testCanTokenizeWithEntityRef(): void
     {
-        $lexer = new Raideer\XmlParser\Lexer();
-        $tokens = $lexer->tokenize('<xml>&amp;</xml>');
-        $this->assertIsArray($tokens);
+        $lexer = new Lexer();
+        $tokens = $lexer->tokenizeAll('<xml>&amp;</xml>');
 
-        $tokenKinds = array_map(fn ($token) => $token->kind, $tokens);
+        $tokenTypes = array_map(fn ($token) => $token->type, $tokens);
 
         $this->assertEquals(
             [
-                TokenKind::OPEN,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::ENTITY_REF,
-                TokenKind::OPEN,
-                TokenKind::SLASH,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::EOF
+                TokenType::Open,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::EntityRef,
+                TokenType::Open,
+                TokenType::Slash,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::Eof,
             ],
-            $tokenKinds
+            $tokenTypes,
         );
 
         $entityRefToken = $tokens[3];
@@ -127,25 +124,24 @@ final class LexerTest extends TestCase
 
     public function testCanTokenizeWithCharRef(): void
     {
-        $lexer = new Raideer\XmlParser\Lexer();
-        $tokens = $lexer->tokenize('<xml>&#38;</xml>');
-        $this->assertIsArray($tokens);
+        $lexer = new Lexer();
+        $tokens = $lexer->tokenizeAll('<xml>&#38;</xml>');
 
-        $tokenKinds = array_map(fn ($token) => $token->kind, $tokens);
+        $tokenTypes = array_map(fn ($token) => $token->type, $tokens);
 
         $this->assertEquals(
             [
-                TokenKind::OPEN,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::CHAR_REF,
-                TokenKind::OPEN,
-                TokenKind::SLASH,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::EOF
+                TokenType::Open,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::CharRef,
+                TokenType::Open,
+                TokenType::Slash,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::Eof,
             ],
-            $tokenKinds
+            $tokenTypes,
         );
 
         $charRefToken = $tokens[3];
@@ -155,27 +151,26 @@ final class LexerTest extends TestCase
 
     public function testCanTokenizeWithAttributes(): void
     {
-        $lexer = new Raideer\XmlParser\Lexer();
-        $tokens = $lexer->tokenize('<xml attr="value"></xml>');
-        $this->assertIsArray($tokens);
+        $lexer = new Lexer();
+        $tokens = $lexer->tokenizeAll('<xml attr="value"></xml>');
 
-        $tokenKinds = array_map(fn ($token) => $token->kind, $tokens);
+        $tokenTypes = array_map(fn ($token) => $token->type, $tokens);
 
         $this->assertEquals(
             [
-                TokenKind::OPEN,
-                TokenKind::NAME,
-                TokenKind::NAME,
-                TokenKind::EQUALS,
-                TokenKind::STRING,
-                TokenKind::CLOSE,
-                TokenKind::OPEN,
-                TokenKind::SLASH,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::EOF
+                TokenType::Open,
+                TokenType::Name,
+                TokenType::Name,
+                TokenType::Equals,
+                TokenType::String,
+                TokenType::Close,
+                TokenType::Open,
+                TokenType::Slash,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::Eof,
             ],
-            $tokenKinds
+            $tokenTypes,
         );
 
         $attrToken = $tokens[2];
@@ -185,56 +180,84 @@ final class LexerTest extends TestCase
         $valueToken = $tokens[4];
 
         $this->assertEquals('value', $valueToken->value);
-        $this->assertEquals('"value"', $valueToken->fullValue);
-        $this->assertEquals(11, $valueToken->offset);
-        $this->assertEquals(10, $valueToken->fullOffset);
+        $this->assertEquals('"value"', $valueToken->rawValue);
+        $this->assertEquals(10, $valueToken->span->start);
     }
 
     public function testCanTokenizeWithText(): void
     {
-        $lexer = new Raideer\XmlParser\Lexer();
-        $tokens = $lexer->tokenize('<xml>text</xml>');
-        $this->assertIsArray($tokens);
+        $lexer = new Lexer();
+        $tokens = $lexer->tokenizeAll('<xml>text</xml>');
 
-        $tokenKinds = array_map(fn ($token) => $token->kind, $tokens);
+        $tokenTypes = array_map(fn ($token) => $token->type, $tokens);
 
         $this->assertEquals(
             [
-                TokenKind::OPEN,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::TEXT,
-                TokenKind::OPEN,
-                TokenKind::SLASH,
-                TokenKind::NAME,
-                TokenKind::CLOSE,
-                TokenKind::EOF
+                TokenType::Open,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::Text,
+                TokenType::Open,
+                TokenType::Slash,
+                TokenType::Name,
+                TokenType::Close,
+                TokenType::Eof,
             ],
-            $tokenKinds
+            $tokenTypes,
         );
 
         $textToken = $tokens[3];
 
         $this->assertEquals('text', $textToken->value);
-        $this->assertEquals(5, $textToken->offset);
+        $this->assertEquals(5, $textToken->span->start);
     }
 
     public function testCanTokenizeWithSelfClosing(): void
     {
-        $lexer = new Raideer\XmlParser\Lexer();
-        $tokens = $lexer->tokenize('<xml/>');
-        $this->assertIsArray($tokens);
+        $lexer = new Lexer();
+        $tokens = $lexer->tokenizeAll('<xml/>');
 
-        $tokenKinds = array_map(fn ($token) => $token->kind, $tokens);
+        $tokenTypes = array_map(fn ($token) => $token->type, $tokens);
 
         $this->assertEquals(
             [
-                TokenKind::OPEN,
-                TokenKind::NAME,
-                TokenKind::SLASH_CLOSE,
-                TokenKind::EOF
+                TokenType::Open,
+                TokenType::Name,
+                TokenType::SlashClose,
+                TokenType::Eof,
             ],
-            $tokenKinds
+            $tokenTypes,
         );
+    }
+
+    public function testGeneratorYieldsTokensLazily(): void
+    {
+        $lexer = new Lexer();
+        $count = 0;
+
+        foreach ($lexer->tokenize('<root><child/></root>') as $token) {
+            $count++;
+            if ($count === 3) {
+                break; // Can break early from generator
+            }
+        }
+
+        $this->assertEquals(3, $count);
+    }
+
+    public function testTokensHaveCorrectLineAndColumn(): void
+    {
+        $lexer = new Lexer();
+        $tokens = $lexer->tokenizeAll("<root>\n  <child/>\n</root>");
+
+        // <root>
+        $this->assertEquals(1, $tokens[0]->span->line);
+        $this->assertEquals(1, $tokens[0]->span->column);
+
+        // Find the <child/> open token — after <root>\n  there are tokens for Open, Name, Close, whitespace
+        // Tokens: Open(<), Name(root), Close(>), SeaWhitespace(\n  ), Open(<), Name(child), SlashClose(/>), SeaWhitespace(\n), Open(<), Slash(/), Name(root), Close(>), Eof
+        $childOpen = $tokens[4]; // Open token for <child
+        $this->assertEquals(2, $childOpen->span->line);
+        $this->assertEquals(3, $childOpen->span->column);
     }
 }

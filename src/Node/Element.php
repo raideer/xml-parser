@@ -5,48 +5,27 @@ declare(strict_types=1);
 namespace Raideer\XmlParser\Node;
 
 use Raideer\XmlParser\Node;
-use Raideer\XmlParser\TokenKind;
+use Raideer\XmlParser\TokenType;
 
-class Element extends Node
+final class Element extends Node
 {
-    const TYPE = 'element';
-
-    public $type = self::TYPE;
-
-    /**
-     * Returns the element name as string.
-     * Returns null if NAME token is not found
-     * 
-     * @return null|string 
-     */
     public function getName(): ?string
     {
-        $token = $this->getFirstToken(TokenKind::NAME);
+        $token = $this->getFirstToken(TokenType::Name);
 
-        if (!$token) {
-            return null;
-        }
-        
-        return $token->value;
+        return $token?->value;
     }
 
     /**
-     * Returns all element attribute nodes
-     * 
-     * @return Attribute[] 
+     * @return Attribute[]
      */
     public function getAttributes(): array
     {
-        return $this->getChildNodesOfType(Attribute::TYPE);
+        return $this->getChildrenOfType(Attribute::class);
     }
 
-    /**
-     * Returns the content node
-     * 
-     * @return null|Content 
-     */
     public function getContent(): ?Content
     {
-        return $this->getFirstChildNode(Content::TYPE);
+        return $this->getFirstChildOfType(Content::class);
     }
 }
